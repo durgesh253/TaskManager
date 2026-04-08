@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block title %}{{ task.title }} — TaskFlow{% endblock %}
+{% block page_title %}Task Detail{% endblock %}
+{% block topbar_actions %}
+<a href="{% url 'dashboard' %}" class="btn btn-secondary btn-sm">← Dashboard</a>
+{% endblock %}
+
+{% block content %}
+<div style="max-width: 700px;">
+    <div class="breadcrumb">
+        <a href="{% url 'dashboard' %}">Dashboard</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>{{ task.title|truncatechars:40 }}</span>
+    </div>
+
+    <!-- Task Header -->
+    <div class="card" style="margin-bottom:16px;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px;">
+            <div style="flex:1;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                    <div class="priority-dot {{ task.priority }}" style="width:10px;height:10px;"></div>
+                    {% if task.is_personal %}
+                    <span class="badge badge-personal">◉ Personal Task</span>
+                    {% else %}
+                    <span class="badge badge-assigned">→ Assigned Task</span>
+                    {% endif %}
+                </div>
+                <h1 style="font-size:22px;font-weight:700;line-height:1.3;margin-bottom:8px;">{{ task.title }}</h1>
+                {% if task.description %}
+                <p style="font-size:14px;color:var(--text-muted);line-height:1.7;">{{ task.description }}</p>
+                {% else %}
+                <p style="font-size:14px;color:var(--text-dim);font-style:italic;">No description provided.</p>
+                {% endif %}
+            </div>
+            <div style="display:flex;gap:8px;flex-shrink:0;">
+                <a href="{% url 'task_edit' task.pk %}" class="btn btn-secondary btn-sm">✎ Edit</a>
+                {% if is_creator %}
+                <a href="{% url 'task_delete' task.pk %}" class="btn btn-danger btn-sm">🗑 Delete</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="detail-grid">
+            <div class="detail-field">
+                <div class="detail-field-label">Status</div>
+                <div class="detail-field-value">
+                    <span class="badge badge-{{ task.status }}">
+                        {% if task.status == 'todo' %}○ Todo
+                        {% elif task.status == 'in_progress' %}◑ In Progress
+                        {% else %}● Done{% endif %}
+                    </span>
+                </div>
+            </div>
+            <div class="detail-field">
+                <div class="detail-field-label">Priority</div>
+                <div class="detail-field-value">
+                    <span class="badge badge-{{ task.priority }}">{{ task.priority|capfirst }}</span>
+                </div>
+            </div>
+            <div class="detail-field">
+                <div class="detail-field-label">Due Date</div>
+                <div class="detail-field-value">
+                    {% if task.due_date %}{{ task.due_date|date:"d M Y" }}{% else %}<span style="color:var(--text-dim);">Not set</span>{% endif %}
+                </div>
+            </div>
+            <div class="detail-field">
+                <div class="detail-field-label">Created</div>
+                <div class="detail-field-value">{{ task.created_at|date:"d M Y" }}</div>
+            </div>
+            <div class="detail-field">
+                <div class="detail-field-label">Created By</div>
+                <div class="detail-field-value">
+                    {{ task.created_by.username }}
+                    {% if task.created_by == request.user %}<span style="font-size:11px;color:var(--text-dim);">(you)</span>{% endif %}
+                </div>
+            </div>
+            <div class="detail-field">
+                <div class="detail-field-label">Assigned To</div>
+                <div class="detail-field-value">
+                    {% if task.assigned_to %}
+                        {{ task.assigned_to.username }}
+                        {% if task.assigned_to == request.user %}<span style="font-size:11px;color:var(--text-dim);">(you)</span>{% endif %}
+                    {% else %}
+                        <span style="color:var(--text-dim);">—</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Permissions Info -->
+    <div class="card" style="background:var(--surface2);">
+        <div class="card-title" style="margin-bottom:14px;font-size:14px;">Your Permissions</div>
+        {% if is_creator and task.is_personal %}
+        <p style="font-size:13px;color:var(--text-muted);">✓ You are the <strong style="color:var(--text);">creator</strong> of this personal task. You can edit all fields and delete this task.</p>
+        {% elif is_creator and task.is_assigned %}
+        <p style="font-size:13px;color:var(--text-muted);">✓ You are the <strong style="color:var(--text);">assigner</strong>. You can update the due date and view progress. You cannot change the task status.</p>
+        {% elif is_assignee %}
+        <p style="font-size:13px;color:var(--text-muted);">✓ You are the <strong style="color:var(--text);">assignee</strong>. You can only update the task status. Title, description, priority, and due date are read-only.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

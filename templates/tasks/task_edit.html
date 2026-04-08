@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block title %}Edit Task — TaskFlow{% endblock %}
+{% block page_title %}Edit Task{% endblock %}
+{% block topbar_actions %}
+<a href="{% url 'task_detail' task.pk %}" class="btn btn-secondary btn-sm">← Back</a>
+{% endblock %}
+
+{% block content %}
+<div style="max-width: 640px;">
+    <div class="breadcrumb">
+        <a href="{% url 'dashboard' %}">Dashboard</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="{% url 'task_detail' task.pk %}">{{ task.title|truncatechars:30 }}</a>
+        <span class="breadcrumb-sep">›</span>
+        <span>Edit</span>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">Edit Task</div>
+            <div style="display:flex;gap:8px;">
+                <span class="badge badge-{{ task.status }}">
+                    {% if task.status == 'todo' %}○ Todo{% elif task.status == 'in_progress' %}◑ In Progress{% else %}● Done{% endif %}
+                </span>
+            </div>
+        </div>
+
+        <!-- Permission notice -->
+        {% if form_type == 'status_only' %}
+        <div class="permission-note">
+            <span>🔒</span>
+            <span>As the <strong>assignee</strong>, you can only update the task status. Other fields are managed by the assigner.</span>
+        </div>
+        {% elif form_type == 'due_date' %}
+        <div class="permission-note">
+            <span>🔒</span>
+            <span>As the <strong>assigner</strong> of this task, you can update the due date. The assignee manages the task status.</span>
+        </div>
+        {% endif %}
+
+        <!-- Read-only task info for restricted forms -->
+        {% if form_type != 'full' %}
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-bottom:20px;">
+            <div class="detail-field-label" style="margin-bottom:8px;">Task Details (Read-only)</div>
+            <div style="font-size:15px;font-weight:600;margin-bottom:4px;">{{ task.title }}</div>
+            {% if task.description %}
+            <div style="font-size:13px;color:var(--text-muted);margin-bottom:8px;">{{ task.description }}</div>
+            {% endif %}
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <span class="badge badge-{{ task.priority }}">{{ task.priority|capfirst }}</span>
+                <span class="badge badge-personal" style="background:var(--surface3);color:var(--text-dim);">
+                    Created by {{ task.created_by.username }}
+                </span>
+            </div>
+        </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+
+            {% if form_type == 'full' %}
+            <!-- Full edit for personal task creator -->
+            <div class="form-group">
+                <label class="form-label">Title *</label>
+                {{ form.title }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                {{ form.description }}
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    {{ form.status }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Priority</label>
+                    {{ form.priority }}
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div class="form-group">
+                    <label class="form-label">Due Date</label>
+                    {{ form.due_date }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Assign To (optional)</label>
+                    {{ form.assigned_to }}
+                </div>
+            </div>
+
+            {% elif form_type == 'due_date' %}
+            <!-- Assigner can only update due date -->
+            <div class="form-group">
+                <label class="form-label">Due Date</label>
+                {{ form.due_date }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Current Status</label>
+                <div style="padding:10px 14px;background:var(--surface3);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;">
+                    <span class="badge badge-{{ task.status }}">
+                        {% if task.status == 'todo' %}○ Todo{% elif task.status == 'in_progress' %}◑ In Progress{% else %}● Done{% endif %}
+                    </span>
+                    <span style="margin-left:8px;font-size:12px;color:var(--text-dim);">Updated by assignee</span>
+                </div>
+            </div>
+
+            {% elif form_type == 'status_only' %}
+            <!-- Assignee can only update status -->
+            <div class="form-group">
+                <label class="form-label">Task Status</label>
+                {{ form.status }}
+            </div>
+            {% if task.due_date %}
+            <div class="form-group">
+                <label class="form-label">Due Date</label>
+                <div style="padding:10px 14px;background:var(--surface3);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;color:var(--text-muted);">
+                    {{ task.due_date|date:"d M Y" }}
+                </div>
+            </div>
+            {% endif %}
+            {% endif %}
+
+            <div class="divider"></div>
+            <div style="display:flex;gap:12px;">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <a href="{% url 'task_detail' task.pk %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

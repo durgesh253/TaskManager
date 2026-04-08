@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — TaskFlow{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- Stats -->
+<div class="stats-grid">
+    <div class="stat-card accent">
+        <div class="stat-label">Total Tasks</div>
+        <div class="stat-value">{{ total_count }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Personal</div>
+        <div class="stat-value" style="color:var(--text-muted);">{{ personal_count }}</div>
+    </div>
+    <div class="stat-card blue">
+        <div class="stat-label">Assigned by Me</div>
+        <div class="stat-value">{{ assigned_by_me_count }}</div>
+    </div>
+    <div class="stat-card yellow">
+        <div class="stat-label">Assigned to Me</div>
+        <div class="stat-value">{{ assigned_to_me_count }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Todo</div>
+        <div class="stat-value" style="color:var(--text-muted);">{{ todo_count }}</div>
+    </div>
+    <div class="stat-card blue">
+        <div class="stat-label">In Progress</div>
+        <div class="stat-value">{{ in_progress_count }}</div>
+    </div>
+    <div class="stat-card green">
+        <div class="stat-label">Done</div>
+        <div class="stat-value">{{ done_count }}</div>
+    </div>
+</div>
+
+<!-- Filter Bar -->
+<form method="get" class="filter-bar">
+    <span class="filter-label">Filter:</span>
+    <select name="type" onchange="this.form.submit()">
+        <option value="" {% if not type_filter %}selected{% endif %}>All Types</option>
+        <option value="personal" {% if type_filter == 'personal' %}selected{% endif %}>Personal Tasks</option>
+        <option value="assigned_by_me" {% if type_filter == 'assigned_by_me' %}selected{% endif %}>Assigned by Me</option>
+        <option value="assigned_to_me" {% if type_filter == 'assigned_to_me' %}selected{% endif %}>Assigned to Me</option>
+    </select>
+    <select name="status" onchange="this.form.submit()">
+        <option value="" {% if not status_filter %}selected{% endif %}>All Status</option>
+        <option value="todo" {% if status_filter == 'todo' %}selected{% endif %}>Todo</option>
+        <option value="in_progress" {% if status_filter == 'in_progress' %}selected{% endif %}>In Progress</option>
+        <option value="done" {% if status_filter == 'done' %}selected{% endif %}>Done</option>
+    </select>
+    <select name="priority" onchange="this.form.submit()">
+        <option value="" {% if not priority_filter %}selected{% endif %}>All Priority</option>
+        <option value="low" {% if priority_filter == 'low' %}selected{% endif %}>Low</option>
+        <option value="medium" {% if priority_filter == 'medium' %}selected{% endif %}>Medium</option>
+        <option value="high" {% if priority_filter == 'high' %}selected{% endif %}>High</option>
+    </select>
+    {% if status_filter or priority_filter or type_filter %}
+    <a href="{% url 'dashboard' %}" class="btn btn-ghost btn-sm">✕ Clear</a>
+    {% endif %}
+    <div style="flex:1;"></div>
+    <span class="filter-label" style="font-family:'JetBrains Mono',monospace;font-size:12px;">{{ tasks|length }} task{{ tasks|length|pluralize }}</span>
+</form>
+
+<!-- Task List -->
+{% if tasks %}
+<div class="task-list">
+    {% for task in tasks %}
+    <a href="{% url 'task_detail' task.pk %}" class="task-card">
+        <div class="priority-dot {{ task.priority }}"></div>
+        <div class="task-card-left">
+            <div class="task-card-title">{{ task.title }}</div>
+            <div class="task-card-meta">
+                <span class="badge badge-{{ task.status }}">
+                    {% if task.status == 'todo' %}○ Todo
+                    {% elif task.status == 'in_progress' %}◑ In Progress
+                    {% else %}● Done{% endif %}
+                </span>
+                <span class="badge badge-{{ task.priority }}">{{ task.priority|capfirst }}</span>
+                {% if task.assigned_to %}
+                    <span class="badge badge-assigned">→ Assigned</span>
+                {% else %}
+                    <span class="badge badge-personal">◉ Personal</span>
+                {% endif %}
+                {% if task.due_date %}
+                <span class="task-card-date">📅 {{ task.due_date|date:"d M Y" }}</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="task-card-right">
+            {% if task.assigned_to %}
+                {% if task.created_by == request.user %}
+                <span class="task-card-assignee" style="font-size:11px;color:var(--text-dim);">→ {{ task.assigned_to.username }}</span>
+                {% else %}
+                <span class="task-card-assignee" style="font-size:11px;color:var(--text-dim);">← {{ task.created_by.username }}</span>
+                {% endif %}
+            {% endif %}
+            <span style="color:var(--text-dim);font-size:18px;">›</span>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="icon">📋</div>
+    <h3>No tasks found</h3>
+    {% if status_filter or priority_filter or type_filter %}
+    <p>Try adjusting your filters to see more tasks.</p>
+    <a href="{% url 'dashboard' %}" class="btn btn-secondary">Clear Filters</a>
+    {% else %}
+    <p>You have no tasks yet. Create your first task to get started.</p>
+    <a href="{% url 'task_create' %}" class="btn btn-primary">＋ Create Task</a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}
