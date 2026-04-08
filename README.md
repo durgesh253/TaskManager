@@ -4,6 +4,13 @@ A task management app I built with Django and PostgreSQL. Nothing fancy — just
 
 ---
 
+## Live Deployment
+
+- Render: [https://taskmanager-1-oz48.onrender.com]
+
+---
+
+
 ## Stack
 
 - **Backend:** Python 3.10+, Django 4.2
@@ -41,7 +48,14 @@ These are intentionally strict:
 - PostgreSQL (local install or a hosted instance)
 - `pip`
 
-### 1. Set up a virtual environment
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/durgesh253/TaskManager.git
+cd TaskManager
+```
+
+### 2. Set up a virtual environment
 
 ```bash
 python -m venv venv
@@ -49,13 +63,16 @@ source venv/bin/activate      # Linux/macOS
 venv\Scripts\activate         # Windows
 ```
 
-### 2. Install dependencies
+### 3. Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Create your `.env` file
+### 4. Create your `.env` file
+Copy the sample file and update values:
+Copy-Item .env.example .env 
+
 
 Drop this in the project root and fill in your values:
 
@@ -75,20 +92,20 @@ DB_HOST=localhost
 DB_PORT=5432
 ```
 
-### 4. Run migrations
+### 5. Run migrations
 
 ```bash
-python manage.py makemigrations
+python manage.py makemigrations accounts tasks
 python manage.py migrate
 ```
 
-### 5. (Optional) Create a superuser
+### 6. (Optional) Create a superuser
 
 ```bash
 python manage.py createsuperuser
 ```
 
-### 6. Seed some demo data
+### 7. Seed some demo data
 
 ```bash
 python manage.py seed_data
@@ -98,7 +115,7 @@ This sets up two test accounts you can use right away:
 - `alice` / `Alice@1234`
 - `bob` / `Bob@1234`
 
-### 7. Start the dev server
+### 8. Start the dev server
 
 ```bash
 python manage.py runserver
